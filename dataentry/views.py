@@ -5,6 +5,8 @@ from uploads.models import Upload
 from django.core.management import call_command
 
 from django.contrib import messages
+from dataentry.utils import check_csv_errors
+from .tasks import import_data_task
 # Create your views here.
 def import_data(request):
     if request.method=='POST':
@@ -15,14 +17,19 @@ def import_data(request):
         #construct the full path
         relative_path=upload.file.name  #uploads/filename.csv
         base_url=settings.BASE_DIR       #trigger the import data command
-        print(relative_path)
-        print(base_url)
         file_path=str(base_url/'media'/relative_path)
+        #check for the  csv errors
         try:
-            call_command('importdata',file_path,model_name)
-            messages.success(request,'Data imported successfully!')
+            check_csv_errors(file_path,model_name)
         except Exception as e:
-            messages.error(request,'Error during data import: {}'.format(e))
+            messages.error(request,f'Error in CSV file: {str(e)}')
+            return redirect('import_data')
+        #handle the importdata task
+        import_data_task.delay(file_path,model_name)
+        
+        #show the message to the user
+        messages.success(request,'Data import has been initiated. You will be notified once it is complete.')
+        
         return redirect('import_data')
     else:
         custom_models=get_all_custom_models()
