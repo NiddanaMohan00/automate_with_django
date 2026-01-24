@@ -5,6 +5,7 @@ from django.core.management.base import BaseCommand,CommandError
 import datetime
 #proposed command - python manage.py exportdata modele_name
 from django.apps import apps
+from dataentry.utils import generate_csv_file
 class Command(BaseCommand):
     help="export data from student database to a csv file"
     def add_arguments(self, parser):
@@ -30,11 +31,9 @@ class Command(BaseCommand):
         #fetch data from the database
         else:
             data=model.objects.all()
-        # print(students)
-            timestamp=datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-            #define the csv file name/path
-            file_path=f'exported_{model_name}_data_{timestamp}.csv'
-            #open the csv file and write the data
+            #generate the csv file
+            file_path=generate_csv_file(model_name)
+            
             # print(file_path)
             
             with open(file_path,'w',newline='') as file:

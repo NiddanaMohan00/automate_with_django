@@ -1,9 +1,11 @@
+from django.shortcuts import redirect
 from awd_main.celery import app
 import time
 from django.core.management import call_command
 from django.core.mail import EmailMessage
 from django.conf import settings
 from dataentry.utils import send_email_nottification
+from dataentry.utils import generate_csv_file
 @app.task
 def celery_test_task():
     
@@ -28,3 +30,26 @@ def import_data_task(file_path,model_name):
     send_email_nottification(mail_subject,message,to_email)
  
     return "Data imported successfully!"
+
+@app.task
+def export_data_task(model_name):
+    try:
+        call_command('exportdata',model_name)
+    except Exception as e:
+        raise e
+    
+    file_path=generate_csv_file(model_name)
+    print(file_path)
+    #send email with the attachment
+    
+    mail_subject='Data Export Successful'
+    message=f'Data has been successfully exported from the {model_name} model. Check theexports folder in media directory.'
+    to_email=settings.DEFAULT_TO_EMAIL
+    send_email_nottification(mail_subject,message,to_email,attachments=file_path)
+    return "Export task completed successfully!"
+
+ 
+    
+    
+    
+
