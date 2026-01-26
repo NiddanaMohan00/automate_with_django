@@ -49,7 +49,7 @@ def send_email_nottification(mail_subject,message,to_email,attachments=None):
     
     try:
         from_email=settings.DEFAULT_FROM_EMAIL
-        mail=EmailMessage(mail_subject,message,from_email,to=[to_email])
+        mail=EmailMessage(mail_subject,message,from_email,to=to_email)
         if attachments is not None :
             mail.attach_file(attachments)
         mail.send()
